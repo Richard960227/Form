@@ -8,7 +8,10 @@
 # testing
 /coverage
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 026695fafca7bcef228bc47659290735d3930226
 # misc
 .DS_Store
 .env.local
