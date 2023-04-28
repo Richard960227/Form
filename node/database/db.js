@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
+require('dotenv').config();
 
-const url = 'mongodb://127.0.0.1:27017/evaluacion_docente'
-mongoose.connect(url)
+mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true });
 
 const db = mongoose.connection
 db.on('open', () => {console.log("¡Conectado a MongoDB!")})
