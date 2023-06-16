@@ -1,13 +1,12 @@
 import React from 'react'
 import { useState } from 'react';
 import Slidebar from './Slidebar';
-import Footer from './Footer'
+import Footer from './Footer';
 
 
 const Home = () => {
     const [isLoading, setIsLoading] = useState(true);
 
-    // Función que finaliza la carga después de 3 segundos
     setTimeout(() => {
         setIsLoading(false);
     }, 3000);

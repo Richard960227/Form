@@ -2,6 +2,7 @@ import express from 'express';
 import multer from 'multer';
 
 import { 
+    getStudentData,
     getAllStudents,
     getStudent,
     createStudent,
@@ -14,6 +15,7 @@ import {
 const router = express.Router();
 const upload = multer({ dest: 'uploads/' });
 
+router.get('/student',getStudentData);
 router.get('/', getAllStudents);
 router.get('/:id', getStudent);
 router.post('/', createStudent);

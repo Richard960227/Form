@@ -1,12 +1,63 @@
-import StudentModel from '../models/StudentModel.js';
+import StudentModel from "../models/StudentModel.js";
 import xlsx from 'xlsx';
 import fs from 'fs';
+import jwt from 'jsonwebtoken';
 
+export const getStudentData = async (req, res) => {
+    const token = req.headers.authorization?.split(' ')[1]; // Obtener el token de la solicitud
+
+    try {
+        const decodedToken = jwt.verify(token, 'secret_key'); // Verificar y decodificar el token
+        const studentId = decodedToken.userId; // Obtener el identificador del alumno del token
+
+        // Obtener la matrícula del estudiante actual
+        const student = await StudentModel.findById(studentId);
+        const matter = student.MATRICULA;
+
+        // Buscar todos los docentes asociados a los alumnos con la misma matrícula
+        const teachers = await StudentModel.distinct('DOCENTE', { MATRICULA: matter });
+        const keys_subjects = await StudentModel.distinct('CLAVE_MATERIA', { MATRICULA: matter});
+        const subjects = await StudentModel.distinct('MATERIA', { MATRICULA: matter });
+        
+        if (teachers.length === 0 || subjects.length === 0) {
+            return res.status(404).json({ message: 'Student Not Found' });
+        }
+
+        // Unificar la información del estudiante
+        const StudentUnique = {
+            CAMPUS: student.CAMPUS,
+            NIVEL: student.NIVEL,
+            PARTE_PERIODO: student.PARTE_PERIODO,
+            CRN: student.CRN,
+            SOCIO_INTEG: student.SOCIO_INTEG,
+            PERIODO: student.PERIODO,
+            BLOQUE: student.BLOQUE,
+            MATRICULA: student.MATRICULA,
+            ALUMNO: student.ALUMNO,
+            ESTATUS: student.ESTATUS,
+            TIPO_ALUMNO: student.TIPO_ALUMNO,
+            CLAVE_PROGRAMA: student.CLAVE_PROGRAMA,
+            PROGRAMA: student.PROGRAMA,
+            CORREO_PREF: student.CORREO_PREF,
+            DOCENTES: teachers,
+            CLAVES_MATERIAS: keys_subjects,
+            MATERIAS: subjects
+        };
+
+        res.status(200).json({ Student: StudentUnique });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error en el servidor' });
+    }
+};
 
 export const getAllStudents = async (req, res) => {
     try {
         const students = await StudentModel.find();
-        res.status(200).json(students);
+        const uniqueStudents = students.filter((item, index, arr) => {
+            return index === arr.findIndex((i) => i.MATRICULA === item.MATRICULA);
+        });
+        res.status(200).json(uniqueStudents);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Internal server error' });
@@ -14,11 +65,11 @@ export const getAllStudents = async (req, res) => {
 };
 
 export const getStudent = async (req, res) => {
-    const { id } = req.params.id;
+    const { id } = req.params;
 
     try {
         const student = await StudentModel.findById(id);
-        if (user) {
+        if (student) {
             res.status(200).json(student);
         } else {
             res.status(404).json({ message: 'Student not found' });
@@ -147,11 +198,7 @@ export const uploadFileStudents = async (req, res) => {
             });
         });
 
-        const uniqueData = validData.filter((item, index, arr) => {
-            return index === arr.findIndex((i) => i.MATRICULA === item.MATRICULA);
-        });
-
-        const savedStudents = await StudentModel.create(uniqueData);
+        const savedStudents = await StudentModel.create(validData);
 
         res.status(201).json({ message: 'File uploaded and students created', students: savedStudents });
     } catch (error) {

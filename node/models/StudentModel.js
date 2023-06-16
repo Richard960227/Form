@@ -18,7 +18,12 @@ const studentSchema = new Schema({
     CLAVE_PROGRAMA: {type: String},
     PROGRAMA: {type: String},
     DOCENTE: {type: String},
-    CORREO_PREF: {type: String}
+    CORREO_PREF: {type: String},
+    DOCENTES: [{ type: Schema.Types.ObjectId }],
+    CLAVES_MATERIAS: [{ type: Schema.Types.ObjectId}],
+    MATERIAS: [{ type: Schema.Types.ObjectId}],
+    role: {type: String, default: 'estudiante'},
 }, {collection: 'students'})
 
 export default mongoose.model('StudentModel', studentSchema)
+
