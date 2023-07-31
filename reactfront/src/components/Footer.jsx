@@ -1,10 +1,14 @@
-import React from 'react'
+import React from 'react';
+import moon from '../assets/moonremovebg.png';
 
 const Footer = () => {
     return (
         <footer className="footer items-center p-4 bg-indigo-900 text-neutral-content">
             <div className="items-center grid-flow-col">
-                <p>Copyright © 2023 - All right reserved</p>
+                <div className="tooltip" data-tip="Luna">
+                    <img src={moon} className="w-5 h-5" alt="Form" style={{ filter: "invert(100%)" }}/>
+                </div>
+                <p>Copyright © 2023 - All right reserved | Powered by Luna for UTC</p>
             </div>
             <div className="grid-flow-col gap-4 md:place-self-center md:justify-self-end">
                 <a href="https://www.facebook.com/UTresCulturas/"><i className="fa-brands fa-facebook-f fa-xl"></i></a>

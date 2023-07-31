@@ -1,4 +1,6 @@
 import StudentModel from "../models/StudentModel.js";
+import TeacherModel from '../models/TeacherModel.js';
+import { SelectedFormModel } from '../models/FormModel.js';
 import xlsx from 'xlsx';
 import fs from 'fs';
 import jwt from 'jsonwebtoken';
@@ -16,6 +18,12 @@ export const getStudentData = async (req, res) => {
 
         // Buscar todos los docentes asociados a los alumnos con la misma matrícula
         const teachers = await StudentModel.distinct('DOCENTE', { MATRICULA: matter });
+        const evaluatedTeachers = await SelectedFormModel.distinct('teacher', {
+            matricula: matter,
+        });
+
+        const missingDocentes = teachers.filter((docente) => !evaluatedTeachers.includes(docente));
+
         const keys_subjects = await StudentModel.distinct('CLAVE_MATERIA', { MATRICULA: matter});
         const subjects = await StudentModel.distinct('MATERIA', { MATRICULA: matter });
         
@@ -39,9 +47,9 @@ export const getStudentData = async (req, res) => {
             CLAVE_PROGRAMA: student.CLAVE_PROGRAMA,
             PROGRAMA: student.PROGRAMA,
             CORREO_PREF: student.CORREO_PREF,
-            DOCENTES: teachers,
+            DOCENTES: missingDocentes,
             CLAVES_MATERIAS: keys_subjects,
-            MATERIAS: subjects
+            MATERIAS: subjects,
         };
 
         res.status(200).json({ Student: StudentUnique });
@@ -130,8 +138,13 @@ export const deleteStudent = async (req, res) => {
 
 export const deleteAllStudents = async (req, res) => {
     try {
-        const result = await StudentModel.deleteMany({});
-        res.json({ message: `${result.deletedCount} estudiantes eliminados` });
+        const studentResult = await StudentModel.deleteMany({});
+        const teacherResult = await TeacherModel.deleteMany({});
+        res.json({
+            message: `${studentResult.deletedCount} estudiantes y ${teacherResult.deletedCount} docentes eliminados`,
+            studentsDeleted: studentResult.deletedCount,
+            teachersDeleted: teacherResult.deletedCount,
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Internal server error' });
@@ -200,7 +213,19 @@ export const uploadFileStudents = async (req, res) => {
 
         const savedStudents = await StudentModel.create(validData);
 
-        res.status(201).json({ message: 'File uploaded and students created', students: savedStudents });
+        // Procesar los datos para almacenarlos en TeacherModel
+        const teacherData = savedStudents.map((student) => {
+            return {
+                CAMPUS: student.CAMPUS,
+                DOCENTE: student.DOCENTE,
+                CLAVES_MATERIAS: student.CLAVE_MATERIA,
+                MATERIAS: student.MATERIA,
+            };
+        });
+
+        const savedTeachers = await TeacherModel.create(teacherData);
+
+        res.status(201).json({ message: 'File uploaded and students created', students: savedStudents, teachers: savedTeachers });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Internal server error' });

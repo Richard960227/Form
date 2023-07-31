@@ -39,7 +39,13 @@ const selectedformSchema = new Schema({
         }],
         answer: { type: mongoose.Schema.Types.Mixed },
     }],
-    teacher: { type: String }
+    teacher: { type: String },
+    campus: { type: String },
+    nivel: { type: String },
+    bloque: { type: String },
+    programa: {type: String},
+    matricula: { type: String },
+    cal_prom: { type: Number }
 }, {collection: 'selectedform'});
 
 export const FormModel = mongoose.model('FormModel', formSchema);

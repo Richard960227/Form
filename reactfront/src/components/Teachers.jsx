@@ -18,7 +18,12 @@ const Teachers = () => {
     useEffect(() => {
         async function getTeacherById() {
             try {
-                const response = await axios.get(`${URI}/${id}`);
+                const token = localStorage.getItem('token');
+                const response = await axios.get(`${URI}/${id}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
                 setTeachers(response.data);
             } catch (error) {
                 console.error(error);
@@ -32,7 +37,12 @@ const Teachers = () => {
 
     async function getTeachers() {
         try {
-            const response = await axios.get(URI);
+            const token = localStorage.getItem('token');
+            const response = await axios.get(URI, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
             if (Array.isArray(response.data)) {
                 setTeachers(response.data);
                 setFilteredTeachers(response.data);
@@ -55,9 +65,8 @@ const Teachers = () => {
             setSearchTerm(searchTerm);
 
             const filteredTeachers = teachers.filter((teacher) =>
-                teacher.CLAVE_MATERIA.toLowerCase().includes(searchTerm) ||
-                teacher.MATERIA.toLowerCase().includes(searchTerm) ||
-                teacher.DOCENTE.toLowerCase().includes(searchTerm)
+                teacher.DOCENTE.toLowerCase().includes(searchTerm) ||
+                teacher.CAMPUS.toLowerCase().includes(searchTerm)
             );
             setFilteredTeachers(filteredTeachers);
         } catch (error) {
@@ -109,10 +118,10 @@ const Teachers = () => {
                     <div className="btn btn-square loading"></div>
                 </div>
             ) : (
-                <div className="h-screen bg-base-200 overflow-y-scroll">
+                <div className="h-screen w-screen bg-base-200 overflow-y-auto">
                     <div className="m-8 flex items-center justify-between">
-                    <div className="dropdown dropdown-right lg:hidden">
-                            <label tabIndex={0} className="btn btn-ghost mask mask-squircle">
+                        <div className="dropdown dropdown-right lg:hidden">
+                            <label tabIndex={0} className="btn btn-ghost mask mask-squircle hover:bg-orange-600 hover:text-white">
                                 <i className="fa-solid fa-magnifying-glass fa-lg"></i>
                             </label>
                             <div tabIndex={0} className="form-control dropdown-content menu p-2 shadow bg-base-100 rounded-box w-68">
@@ -124,7 +133,7 @@ const Teachers = () => {
                                         value={searchTerm}
                                         onChange={SearchTermChange}
                                     />
-                                    <button className="btn btn-square" onClick={SearchReset}>
+                                    <button className="btn btn-square hover:bg-orange-600 hover:text-white" onClick={SearchReset}>
                                         <i className="fa-solid fa-broom fa-lg"></i>
                                     </button>
                                 </div>
@@ -139,7 +148,7 @@ const Teachers = () => {
                                     value={searchTerm}
                                     onChange={SearchTermChange}
                                 />
-                                <button className="btn btn-square" onClick={SearchReset}>
+                                <button className="btn btn-square hover:bg-orange-600 hover:text-white" onClick={SearchReset}>
                                     <i className="fa-solid fa-broom fa-lg"></i>
                                 </button>
                             </div>
@@ -149,32 +158,42 @@ const Teachers = () => {
                         </div>
                     </div>
                     <div className="mr-8 flex justify-end">
-                        <button className="btn btn-ghost mask mask-squircle m-2" onClick={orderByAsc}>
+                        <button className="btn btn-ghost mask mask-squircle hover:bg-orange-600 hover:text-white" onClick={orderByAsc}>
                             <i className="fa-solid fa-arrow-down-a-z fa-lg"></i>
                         </button>
-                        <button className="btn btn-ghost mask mask-squircle m-2" onClick={orderByDesc}>
+                        <button className="btn btn-ghost mask mask-squircle hover:bg-orange-600 hover:text-white" onClick={orderByDesc}>
                             <i className="fa-solid fa-arrow-down-z-a fa-lg"></i>
                         </button>
                     </div>
-                    <div className="m-8 overflow-y-scroll max-h-96 rounded-lg shadow-xl bg-base-100">
+                    <div className="m-8 overflow-y-auto overflow-x-auto max-h-96 rounded-lg shadow-xl bg-base-100">
                         {filteredTeachers.map((teacher, index) => (
-                            <div key={index} className="m-8 flex items-center justify-between border-b border-orange-600 py-4">
+                            <div key={index} className="m-4 flex items-center justify-between border-b border-orange-600 p-4">
                                 <div className="flex items-center">
                                     <div className="m-4 mask mask-squircle bg-orange-600 h-10 w-10 flex items-center justify-center text-white">
                                         {teacher.DOCENTE.charAt(0)}
                                     </div>
                                     <div className="ml-2">
+                                        <p className="font-bold">{teacher.CAMPUS}</p>
                                         <p className="font-semibold">{teacher.DOCENTE}</p>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <p>{teacher.CLAVE_MATERIA}</p>
-                                    <p>{teacher.MATERIA}</p>
+                                    {teacher.CLAVES_MATERIAS.map((clave, index) => (
+                                        <div key={index}>
+                                            <p className="font-semibold">{clave}:
+                                                {teacher.MATERIAS[clave].map((materia, materiaIndex) => (
+                                                    <span key={materiaIndex} className="ml-2 font-normal">
+                                                        {materia}
+                                                    </span>
+                                                ))}
+                                            </p>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         ))}
                     </div>
-                    <div className="m-10 flex items-center justify-end">
+                    <div className="m-10 flex justify-end">
                         <p className="text-sm">Registros: {teachers.length}</p>
                     </div>
                 </div >

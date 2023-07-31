@@ -141,7 +141,7 @@ export const updateQuestion = async (req, res) => {
             return res.status(404).json({ message: 'Form not found' });
         }
 
-        const questionIndex = form.questions.findIndex(question => question._id == questionId);
+        const questionIndex = form.questions.findIndex((question) => question._id.toString() === questionId);
         if (questionIndex < 0) {
             return res.status(404).json({ message: 'Question not found' });
         }
@@ -166,7 +166,7 @@ export const deleteQuestion = async (req, res) => {
             return res.status(404).json({ message: 'Form not found' });
         }
 
-        const questionIndex = form.questions.findIndex(question => question._id == questionId);
+        const questionIndex = form.questions.findIndex((question) => question._id.toString() === questionId);
         if (questionIndex < 0) {
             return res.status(404).json({ message: 'Question not found' });
         }
@@ -232,7 +232,7 @@ export const FormSelect = async (req, res) => {
 export const getSelectedForm = async (req, res) => {
     try {
         const selectedForm = await SelectedFormModel.findOne();
-        res.status(200).json( selectedForm );
+        res.status(200).json(selectedForm);
     } catch (error) {
         res.status(500).json({ message: 'Error al mostrar formualrio' });
     }
@@ -242,12 +242,11 @@ export const getSelectedForm = async (req, res) => {
 export const getAllFormsAnswers = async (req, res) => {
     try {
         const selectedForms = await SelectedFormModel.find().skip(1);
-        res.status(200).json( selectedForms );
+        res.status(200).json(selectedForms);
     } catch (error) {
         res.status(500).json({ error: 'Error al obtener los formularios' });
     }
 };
-
 
 // Guardar respuestas del formulario
 export const saveFormResponses = async (req, res) => {
@@ -297,6 +296,11 @@ export const saveFormResponses = async (req, res) => {
             }),
         });
         selectedForm.teacher = req.body.teacher;
+        selectedForm.campus = req.body.campus;
+        selectedForm.nivel = req.body.nivel;
+        selectedForm.bloque = req.body.bloque;
+        selectedForm.programa = req.body.programa;
+        selectedForm.matricula = req.body.matricula;
         await selectedForm.save();
         res.status(200).json({ message: 'Form saved successfully' });
     } catch (error) {

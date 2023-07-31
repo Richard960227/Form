@@ -18,7 +18,12 @@ const Students = () => {
     useEffect(() => {
         async function getStudentById() {
             try {
-                const response = await axios.get(`${URI}/${id}`);
+                const token = localStorage.getItem('token');
+                const response = await axios.get(`${URI}/${id}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
                 setStudents(response.data);
             } catch (error) {
                 console.error(error);
@@ -32,7 +37,12 @@ const Students = () => {
 
     async function getStudents() {
         try {
-            const response = await axios.get(URI);
+            const token = localStorage.getItem('token');
+            const response = await axios.get(URI, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
             if (Array.isArray(response.data)) {
                 setStudents(response.data);
                 setFilteredStudents(response.data);
@@ -122,10 +132,10 @@ const Students = () => {
                     <div className="btn btn-square loading"></div>
                 </div>
             ) : (
-                <div className="h-screen bg-base-200 overflow-y-scroll">
+                <div className="h-screen w-screen bg-base-200 overflow-y-auto">
                     <div className="m-8 flex items-center justify-between">
                         <div className="dropdown dropdown-right lg:hidden">
-                            <label tabIndex={0} className="btn btn-ghost mask mask-squircle">
+                            <label tabIndex={0} className="btn btn-ghost mask mask-squircle hover:bg-orange-600 hover:text-white">
                                 <i className="fa-solid fa-magnifying-glass fa-lg"></i>
                             </label>
                             <div tabIndex={0} className="form-control dropdown-content menu p-2 shadow bg-base-100 rounded-box w-68">
@@ -137,7 +147,7 @@ const Students = () => {
                                         value={searchTerm}
                                         onChange={SearchTermChange}
                                     />
-                                    <button className="btn btn-square" onClick={SearchReset}>
+                                    <button className="btn btn-square hover:bg-orange-600 hover:text-white" onClick={SearchReset}>
                                         <i className="fa-solid fa-broom fa-lg"></i>
                                     </button>
                                 </div>
@@ -152,7 +162,7 @@ const Students = () => {
                                     value={searchTerm}
                                     onChange={SearchTermChange}
                                 />
-                                <button className="btn btn-square" onClick={SearchReset}>
+                                <button className="btn btn-square hover:bg-orange-600 hover:text-white" onClick={SearchReset}>
                                     <i className="fa-solid fa-broom fa-lg"></i>
                                 </button>
                             </div>
@@ -162,16 +172,16 @@ const Students = () => {
                         </div>
                     </div>
                     <div className="mr-8 flex justify-end">
-                        <button className="btn btn-ghost mask mask-squircle m-2" onClick={orderByAsc}>
+                        <button className="btn btn-ghost mask mask-squircle hover:bg-orange-600 hover:text-white" onClick={orderByAsc}>
                             <i className="fa-solid fa-arrow-down-a-z fa-lg"></i>
                         </button>
-                        <button className="btn btn-ghost mask mask-squircle m-2" onClick={orderByDesc}>
+                        <button className="btn btn-ghost mask mask-squircle hover:bg-orange-600 hover:text-white" onClick={orderByDesc}>
                             <i className="fa-solid fa-arrow-down-z-a fa-lg"></i>
                         </button>
                     </div>
-                    <div className="m-8 overflow-y-scroll max-h-96 rounded-lg shadow-xl bg-base-100">
+                    <div className="m-8 overflow-y-auto overflow-x-auto max-h-96 rounded-lg shadow-xl bg-base-100">
                         {filteredStudents.map((student, index) => (
-                            <div key={index} className="m-8 overflow-x-scroll flex items-center justify-between border-b border-orange-600 py-4">
+                            <div key={index} className="m-4 flex items-center justify-between border-b border-orange-600 py-4">
                                 <div className="flex items-center">
                                     <div className="m-4 mask mask-squircle bg-orange-600 h-10 w-10 flex items-center justify-center text-white">
                                         {student.CAMPUS.substring(0, 3)}
@@ -201,7 +211,7 @@ const Students = () => {
                             </div>
                         ))}
                     </div>
-                    <div className="m-10 flex items-center justify-end">
+                    <div className="m-10 flex justify-end">
                         <p className="text-sm">Registros: {students.length}</p>
                     </div>
                 </div >

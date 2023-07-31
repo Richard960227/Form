@@ -3,7 +3,7 @@ import Error404 from '../assets/Error.jpeg'
 
 const Error = () => {
     return (
-        <div className="flex items-center justify-center h-screen overflow-hidden">
+        <div className="flex items-center justify-center h-screen">
             <img src={Error404} alt="Error404"/>
         </div>
     )

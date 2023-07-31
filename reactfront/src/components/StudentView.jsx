@@ -16,7 +16,7 @@ const StudentView = () => {
     const [formData, setFormData] = useState({
         answers: [],
         selectedOptions: [],
-        selectedDocente: ''
+        selectedDocente: '',
     });
     const [studentData, setStudentData] = useState({});
     const [docentes, setDocentes] = useState([]);
@@ -25,6 +25,7 @@ const StudentView = () => {
     const [showComplete, setShowComplete] = useState(false);
     const [showForm, setShowForm] = useState(true)
     const availableDocentes = docentes.filter((docente) => !evaluatedDocentes.includes(docente));
+    const [showError, setShowError] = useState(false);
 
     // Función que finaliza la carga después de 3 segundos
     setTimeout(() => {
@@ -69,7 +70,12 @@ const StudentView = () => {
     useEffect(() => {
         async function getSelectedForm() {
             try {
-                const response = await axios.get(`${URIForm}/response`);
+                const token = localStorage.getItem('token');
+                const response = await axios.get(`${URIForm}/response`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
                 setForm(response.data);
             } catch (error) {
                 console.error(error);
@@ -98,7 +104,7 @@ const StudentView = () => {
                     }
                     break;
                 case 'scale':
-                    if (answer >= question.scale.min) {
+                    if (answer > question.scale.min) {
                         answeredQuestions++;
                     }
                     break;
@@ -119,7 +125,6 @@ const StudentView = () => {
 
         return calculatedProgress;
     };
-
 
     const handleAnswerChange = (event, questionIndex) => {
         const { type, value, checked } = event.target;
@@ -161,15 +166,20 @@ const StudentView = () => {
             ...prevData,
             answers: [],
             selectedOptions: [],
-            selectedDocente: ''
+            selectedDocente: '',
         }));
         setProgress(calculateProgress());
     };
 
     async function handleSubmit(event) {
         event.preventDefault();
+        if (!formData.selectedDocente) {
+            setShowError(true);
+            return;
+        }
 
         try {
+            const token = localStorage.getItem('token');
             const formattedAnswers = formData.answers.map((answer, index) => {
                 const question = form.questions[index];
                 switch (question.type) {
@@ -189,18 +199,29 @@ const StudentView = () => {
             await axios.post(`${URIForm}/${form._id}/responses`, {
                 answers: formattedAnswers,
                 teacher: formData.selectedDocente,
-            });
+                campus: studentData.CAMPUS,
+                nivel: studentData.NIVEL,
+                bloque: studentData.BLOQUE,
+                programa: studentData.PROGRAMA,
+                matricula: studentData.MATRICULA
+            },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
 
             setEvaluatedDocentes((prevEvaluatedDocentes) => [...prevEvaluatedDocentes, formData.selectedDocente]);
 
             setShowSubmitButton(false);
             resetForm();
             setProgress(true);
+            setShowError(false);
         } catch (error) {
             console.error(error);
         }
     }
-
 
     //Funcion que carga el estudiante
     useEffect(() => {
@@ -275,22 +296,24 @@ const StudentView = () => {
                             </div>
                             <label
                                 htmlFor='info'
-                                className="btn btn-ghost mask mask-squircle">
+                                className="btn btn-ghost mask mask-squircle hover:bg-orange-600 hover:text-white">
                                 <i className="fa-solid fa-info fa-lg"></i>
                             </label>
                             {/* Info */}
                             <input type="checkbox" id='info' className="modal-toggle" />
                             <div className="modal">
-                                <div className="modal-box relative">
-                                    <label
-                                        htmlFor='info'
-                                        className="btn btn-ghost mask mask-squircle absolute right-2 top-2">
-                                        ✕
-                                    </label>
-                                    <h3 className="font-semibold text-xl">Querido alumno,</h3>
+                                <div className="modal-box text-lg">
+                                    <div className="modal-action">
+                                        <label
+                                            htmlFor='info'
+                                            className="absolute right-2 top-2 btn btn-sm btn-ghost mask mask-squircle hover:bg-red-600 hover:text-white">
+                                            ✕
+                                        </label>
+                                    </div>
+                                    <h3 className="font-semibold text-2xl">Querido alumno,</h3>
                                     <br />
                                     <p>
-                                        <span className="text-lg">¡Tu participación es fundamental!... </span>
+                                        <span className="text-xl mr-4">¡Tu participación es fundamental!...</span>
                                         Al responder correctamente este formulario, estás contribuyendo a evaluar a tus docentes de manera precisa y justa.
                                         Recuerda que tu opinión y retroalimentación son valiosas para mejorar la calidad educativa.
                                     </p>
@@ -301,14 +324,20 @@ const StudentView = () => {
                                     <br />
                                     <p>¡Gracias por tu colaboración!</p>
                                     <br />
-                                    <p>Atentamente,</p>
-                                    <p className="font-semibold text-2xl">Universidad Tres Culturas</p>
+                                    <p className="font-semibold text-xl">Atentamente,</p>
+                                    <p className="font-bold text-3xl">Universidad Tres Culturas</p>
                                 </div>
                             </div>
                         </div>
                         <div className="hero min-h-screen bg-base-200">
                             {showForm && (
                                 <div className="card bg-base-100 shadow-xl overflow-x-auto">
+                                    {showError ? (
+                                        <div className="alert alert-error shadow-lg">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                            <span>Selecciona un Docente.</span>
+                                        </div>
+                                    ) : null}
                                     <form className="card-body" onSubmit={handleSubmit}>
                                         <p>{form.description}</p>
                                         <div className="m-2 flex items-center justify-between">
@@ -332,7 +361,7 @@ const StudentView = () => {
                                             <div className="flex justify-end">
                                                 {availableDocentes.length > 0 ? (
                                                     showSubmitButton ? (
-                                                        <button type="submit" className="btn btn-ghost mask mask-squircle">
+                                                        <button type="submit" className="btn btn-ghost mask mask-squircle hover:bg-orange-600 hover:text-white">
                                                             <i className="fa-solid fa-paper-plane fa-xl"></i>
                                                         </button>
                                                     ) : (
@@ -373,7 +402,7 @@ const StudentView = () => {
                                                             ))}
                                                         </div>
                                                     )}
-                                                    {question.type === 'scale' && (
+                                                    {question.type === 'scale' && question.scale && (
                                                         <div className="m-2 w-full max-w-xs">
                                                             <input
                                                                 type="range"
@@ -405,12 +434,10 @@ const StudentView = () => {
                                 </div>
                             )}
                             {showComplete && (
-                                <div className="hero-content w-96 alert alert-success shadow-lg">
-                                    <div>
+                                <div className="hero-content w-96">
+                                    <div className="alert alert-success shadow-xl">
                                         <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                         <span>Todos los docentes han sido evaluados!
-
-
                                         </span>
                                     </div>
                                 </div>
@@ -425,6 +452,8 @@ const StudentView = () => {
                             <li className="ml-4 mb-2">{studentData.CAMPUS}</li>
                             <p>Carrera:</p>
                             <li className="ml-4 mb-2">{studentData.PROGRAMA}</li>
+                            <p>Nivel:</p>
+                            <li className="ml-4 mb-2">{studentData.NIVEL}</li>
                             <li className="bg-orange-600 mt-4 mb-4"></li>
                             <p className="mt-2">Alumno:</p>
                             <li className="ml-4 mb-2">{studentData.ALUMNO}</li>
@@ -443,7 +472,7 @@ const StudentView = () => {
                             ))}
                             <li className="bg-orange-600 mt-4 mb-4"></li>
                             <div className="flex justify-end">
-                                <label className="btn btn-ghost swap swap-rotate mask mask-squircle">
+                                <label className="btn btn-ghost swap swap-rotate mask mask-squircle hover:bg-orange-600 hover:text-white">
                                     <input
                                         type="checkbox"
                                         checked={darkModeEnabled}
@@ -452,7 +481,7 @@ const StudentView = () => {
                                     <svg className="swap-on fill-current w-7 h-7" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5.64,17l-.71.71a1,1,0,0,0,0,1.41,1,1,0,0,0,1.41,0l.71-.71A1,1,0,0,0,5.64,17ZM5,12a1,1,0,0,0-1-1H3a1,1,0,0,0,0,2H4A1,1,0,0,0,5,12Zm7-7a1,1,0,0,0,1-1V3a1,1,0,0,0-2,0V4A1,1,0,0,0,12,5ZM5.64,7.05a1,1,0,0,0,.7.29,1,1,0,0,0,.71-.29,1,1,0,0,0,0-1.41l-.71-.71A1,1,0,0,0,4.93,6.34Zm12,.29a1,1,0,0,0,.7-.29l.71-.71a1,1,0,1,0-1.41-1.41L17,5.64a1,1,0,0,0,0,1.41A1,1,0,0,0,17.66,7.34ZM21,11H20a1,1,0,0,0,0,2h1a1,1,0,0,0,0-2Zm-9,8a1,1,0,0,0-1,1v1a1,1,0,0,0,2,0V20A1,1,0,0,0,12,19ZM18.36,17A1,1,0,0,0,17,18.36l.71.71a1,1,0,0,0,1.41,0,1,1,0,0,0,0-1.41ZM12,6.5A5.5,5.5,0,1,0,17.5,12,5.51,5.51,0,0,0,12,6.5Zm0,9A3.5,3.5,0,1,1,15.5,12,3.5,3.5,0,0,1,12,15.5Z" /></svg>
                                     <svg className="swap-off fill-current w-7 h-7" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21.64,13a1,1,0,0,0-1.05-.14,8.05,8.05,0,0,1-3.37.73A8.15,8.15,0,0,1,9.08,5.49a8.59,8.59,0,0,1,.25-2A1,1,0,0,0,8,2.36,10.14,10.14,0,1,0,22,14.05,1,1,0,0,0,21.64,13Zm-9.5,6.69A8.14,8.14,0,0,1,7.08,5.22v.27A10.15,10.15,0,0,0,17.22,15.63a9.79,9.79,0,0,0,2.1-.22A8.11,8.11,0,0,1,12.14,19.73Z" /></svg>
                                 </label>
-                                <button id="exit" className="btn btn-ghost mask mask-squircle" onClick={handleLogout}>
+                                <button id="exit" className="btn btn-ghost mask mask-squircle hover:bg-orange-600 hover:text-white" onClick={handleLogout}>
                                     <i className="fa-solid fa-right-from-bracket fa-lg"></i>
                                 </button>
                             </div>

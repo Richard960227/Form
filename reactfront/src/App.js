@@ -9,16 +9,14 @@ import Home from './components/Home';
 import TeacherView from './components/TeacherView';
 import StudentView from './components/StudentView';
 
-
-
 function Landing() {
 
   const [isLoading, setIsLoading] = useState(true);
 
-  // Función que finaliza la carga después de 5 segundos
+  // Función que finaliza la carga después de 3 segundos
   setTimeout(() => {
     setIsLoading(false);
-  }, 5000);
+  }, 3000);
 
   return (
     <>
@@ -38,19 +36,24 @@ function Landing() {
 }
 
 const App = () => {
+  const isLoggedIn = localStorage.getItem('token') !== null;
   return (
     <>
       <BrowserRouter>
         <Routes>
-          <Route path='/' element={<Landing />} />
-          <Route path='/home/' element={<Home />} />
-          <Route path='/teacher/' element={<TeacherView />} />
-          <Route path='/student/' element={<StudentView />} />
+          {isLoggedIn ? (
+            <>
+              <Route path='/home/*' element={<Home />} />
+              <Route path='/teacher/*' element={<TeacherView />} />
+              <Route path='/student/*' element={<StudentView />} />
+            </>
+          ) : (
+            <Route path='/*' element={<Landing />} />
+          )}
         </Routes>
       </BrowserRouter>
     </>
   );
 }
 
-
-export default App
+export default App;

@@ -36,7 +36,7 @@ router.delete('/:formId/questions/:questionId', deleteQuestion);
 router.delete('/:formId/questions', deleteAllQuestions);
 
 router.get('/select/response', getSelectedForm)
-router.get('/select/forms', getAllFormsAnswers);
+router.get('/select/answers', getAllFormsAnswers);
 router.post('/select/:formId', FormSelect);
 router.delete('/select/:formId', FormSelect);
 router.post('/select/:formId/responses', saveFormResponses)
